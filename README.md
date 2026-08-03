@@ -14,7 +14,7 @@
 
 | Section | What you'll find |
 |---|---|
-| [Installation & Auth](#) | `curl` installer, Homebrew, npm, API key + ChatGPT auth |
+| [Installation & Auth](#) | Terminal CLI (`curl`/npm/brew), Desktop & Mobile app, VS Code extension, API key + ChatGPT auth |
 | [Core CLI Commands](#) | Tiered reference: daily drivers → cloud → MCP/plugins |
 | [Global Flags](#) | `--sandbox`, `--model`, `--ask-for-approval`, `--yolo`, `--search` |
 | [Sandbox & Approval Modes](#) | When to use `read-only`, `workspace-write`, `writes`, `never` |
@@ -40,6 +40,7 @@
 
 ## ⚡ Quick Start
 
+**Option A — Terminal (CLI)**
 ```bash
 # Install (Mac/Linux)
 curl -fsSL https://chatgpt.com/codex/install.sh | sh
@@ -53,6 +54,17 @@ codex login
 # Start coding
 codex "refactor the auth module to use async/await"
 ```
+
+**Option B — Desktop / Mobile App**
+
+Download the ChatGPT app for [macOS / Windows](https://chatgpt.com/download) or install from the [App Store](https://apps.apple.com) / [Google Play](https://play.google.com), then open a project and interact with Codex directly in the chat interface.
+
+**Option C — VS Code Extension**
+```bash
+# Install from the VS Code CLI
+code --install-extension openai.codex
+```
+Or search **"OpenAI Codex"** in the VS Code Extensions panel (`Ctrl+Shift+X` / `Cmd+Shift+X`).
 
 ### Most Useful Commands at a Glance
 

@@ -9,6 +9,9 @@
 ## Contents
 
 1. [Installation & Auth](#installation--auth)
+   - [Method 1 — Terminal (CLI)](#method-1--terminal-cli)
+   - [Method 2 — Desktop & Mobile Application](#method-2--desktop--mobile-application)
+   - [Method 3 — VS Code Extension](#method-3--vs-code-extension)
 2. [Core CLI Commands](#core-cli-commands-most--least-used)
 3. [Global Flags](#global-flags-pass-to-any-command)
 4. [Sandbox Modes](#sandbox-modes---sandbox---s)
@@ -35,6 +38,10 @@
 
 ## Installation & Auth
 
+### Method 1 — Terminal (CLI)
+
+The primary way to use Codex is through the command-line interface (CLI).
+
 ```bash
 # Recommended: standalone installer (Mac/Linux)
 curl -fsSL https://chatgpt.com/codex/install.sh | sh
@@ -52,6 +59,101 @@ codex login --with-api-key         # paste API key from stdin
 codex login --device-auth          # OAuth device code flow
 codex login status                 # check auth state
 ```
+
+**Verify installation:**
+```bash
+codex --version                    # confirm installed version
+codex doctor                       # run diagnostics / check setup
+```
+
+**First session:**
+```bash
+codex                              # open interactive TUI
+codex "explain this codebase"      # open TUI with a prompt pre-loaded
+```
+
+---
+
+### Method 2 — Desktop & Mobile Application
+
+Codex is built into the **ChatGPT desktop app** (macOS / Windows) and the **ChatGPT mobile app** (iOS / Android). No separate CLI installation is required.
+
+| Platform | How to access |
+|---|---|
+| **macOS** | Download ChatGPT for Mac from [chatgpt.com/download](https://chatgpt.com/download) → open a chat → type `@Codex` or open a project |
+| **Windows** | Download ChatGPT for Windows from [chatgpt.com/download](https://chatgpt.com/download) → same as macOS |
+| **iOS** | Install the ChatGPT app from the App Store → tap **Tools** → **Codex** |
+| **Android** | Install the ChatGPT app from Google Play → tap **Tools** → **Codex** |
+
+**Requirements:** ChatGPT Plus, Pro, or Teams subscription (or API key for API access).
+
+**Tips for desktop/mobile:**
+- Attach screenshots or images to describe a UI you want built.
+- Use **voice input** on mobile to describe tasks hands-free.
+- Sessions created in the app can be resumed in the terminal with `codex resume <SESSION_ID>`.
+- The desktop app provides a side-by-side view: chat on the left, terminal output on the right.
+
+---
+
+### Method 3 — VS Code Extension
+
+The **Codex extension for Visual Studio Code** integrates Codex directly into your editor sidebar, providing context-aware suggestions powered by your open files and workspace.
+
+**Install the extension:**
+
+1. Open VS Code → press `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (macOS) to open the Extensions panel.
+2. Search for **"OpenAI Codex"** and click **Install**.
+3. Alternatively, install from the marketplace URL:
+   ```
+   https://marketplace.visualstudio.com/items?itemName=openai.codex
+   ```
+4. Or install via the VS Code CLI:
+   ```bash
+   code --install-extension openai.codex
+   ```
+
+**Sign in:**
+- Open the Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`) → **Codex: Sign In**.
+- Choose **Sign in with ChatGPT** (Plus/Pro/Teams) or **Sign in with API Key**.
+
+**Key VS Code commands (Command Palette):**
+
+| Command | Description |
+|---|---|
+| `Codex: Open Chat` | Open the Codex chat panel in the sidebar |
+| `Codex: Edit Selection` | Ask Codex to rewrite the selected code |
+| `Codex: Explain Selection` | Get a plain-English explanation of selected code |
+| `Codex: Fix Selection` | Ask Codex to fix bugs in selected code |
+| `Codex: Generate Tests` | Auto-generate unit tests for selected function/class |
+| `Codex: New Session` | Start a fresh Codex session scoped to the workspace |
+| `Codex: Resume Session` | Resume the most recent session |
+| `Codex: Sign In` | Authenticate with ChatGPT or API key |
+| `Codex: Sign Out` | Sign out of the extension |
+
+**Keyboard shortcuts (VS Code):**
+
+| Shortcut | Action |
+|---|---|
+| `Ctrl+Shift+I` / `Cmd+Shift+I` | Open Codex chat sidebar |
+| `Ctrl+K Ctrl+I` / `Cmd+K Cmd+I` | Inline edit selected code |
+| `Ctrl+K Ctrl+E` / `Cmd+K Cmd+E` | Explain selected code |
+
+**Extension settings (`settings.json`):**
+```json
+{
+  "codex.model": "gpt-5.6-terra",
+  "codex.sandbox": "workspace-write",
+  "codex.autoContext": true,
+  "codex.showInlineHints": true,
+  "codex.approval": "on-change"
+}
+```
+
+**Tips for VS Code:**
+- Right-click any selection → **Codex** sub-menu for quick inline actions.
+- The extension automatically passes open files and the `AGENTS.md` at the workspace root as context.
+- Use `@workspace` in the chat panel to explicitly scope answers to your project.
+- Terminal sessions started from VS Code's integrated terminal share the same Codex session as the sidebar.
 
 ---
 
