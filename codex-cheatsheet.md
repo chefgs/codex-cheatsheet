@@ -1,7 +1,35 @@
 # Codex CLI — Quick Cheatsheet
 
 > OpenAI Codex CLI commands ranked most → least useful, with prompt and context best practices.
-> Source: [developers.openai.com/codex](https://developers.openai.com/codex)
+> Source: [developers.openai.com/codex](https://developers.openai.com/codex) · [GitHub](https://github.com/openai/codex)
+> Current version: **v0.146.0** (2026-07-29)
+
+---
+
+## Contents
+
+1. [Installation & Auth](#installation--auth)
+2. [Core CLI Commands](#core-cli-commands-most--least-used)
+3. [Global Flags](#global-flags-pass-to-any-command)
+4. [Sandbox Modes](#sandbox-modes---sandbox---s)
+5. [Approval Modes](#approval-modes---ask-for-approval---a)
+6. [Slash Commands](#slash-commands-interactive-mode-most--least-used)
+7. [Keyboard Shortcuts](#keyboard-shortcuts-tui)
+8. [AGENTS.md — Project Instructions](#agentsmd--project-instructions)
+9. [config.toml — Key Settings](#configtoml--key-settings)
+10. [Models (2026)](#models-2026)
+11. [Exec / CI Mode](#exec-non-interactive--ci-mode)
+12. [Multi-Agent (V2)](#multi-agent-v2--stable)
+13. [Thread Management](#thread-management-v0145)
+14. [Agent Plugins](#agent-plugins-v0143)
+15. [Proxy Support](#proxy-support-v0143)
+16. [Prompt Best Practices](#prompt-best-practices)
+17. [Context & Token Usage](#context--token-usage)
+18. [Effective Patterns](#effective-patterns)
+19. [CI/CD Integration](#cicd-integration)
+20. [Troubleshooting](#troubleshooting)
+21. [Quick Reference Card](#quick-reference-card)
+22. [Environment Variables](#environment-variables)
 
 ---
 
@@ -364,6 +392,99 @@ codex --ask-for-approval never "Summarize the current instructions."
 
 # Limit: 32 KiB combined across all AGENTS.md files
 # Use project_doc_max_bytes in config.toml to adjust
+```
+
+### AGENTS.md Stack Templates
+
+#### Node.js / TypeScript (Express + Jest)
+
+```markdown
+# Project: my-api
+
+## Repo Layout
+- `src/routes/`   — Express route handlers
+- `src/services/` — Business logic
+- `src/models/`   — TypeScript interfaces and Zod schemas
+- `src/tests/`    — Jest unit + integration tests
+
+## Build & Test
+- Install: `npm ci`
+- Test:    `npm test`
+- Lint:    `npm run lint`       (eslint + prettier)
+- Build:   `npm run build`
+- Types:   `npx tsc --noEmit`
+
+## Conventions
+- TypeScript strict mode; never use `any` — use `unknown` + type guards
+- All DB access through repository classes in `src/repositories/`
+- Use Zod for all request/response validation
+- Jest for tests; use `describe/it` blocks; mock external services
+
+## Do NOT
+- Modify `db/migrations/` manually — run `npm run migrate:new`
+- Hardcode secrets — use `process.env` with dotenv-safe
+- Change public API response shapes without bumping the version prefix
+```
+
+#### Go (standard library + sqlc)
+
+```markdown
+# Project: go-service
+
+## Repo Layout
+- `cmd/`         — main entrypoints
+- `internal/`    — private packages (handlers, services, store)
+- `pkg/`         — shared/public packages
+- `sqlc/`        — SQL queries (do not hand-edit generated files)
+- `migrations/`  — goose migration files
+
+## Build & Test
+- Test:   `go test ./...`
+- Lint:   `golangci-lint run`
+- Build:  `go build ./cmd/...`
+- Vet:    `go vet ./...`
+
+## Conventions
+- Use `errors.Is` / `errors.As` — never compare error strings
+- Context must be the first argument to every function that does I/O
+- All exported functions must have a GoDoc comment
+- DB queries only via sqlc-generated code in `internal/store/`
+
+## Do NOT
+- Edit files under `internal/store/` — regenerate with `sqlc generate`
+- Use `panic` in library code
+- Add global mutable state
+```
+
+#### Java / Spring Boot (Maven)
+
+```markdown
+# Project: spring-service
+
+## Repo Layout
+- `src/main/java/com/example/` — application code
+  - `controller/` — REST controllers
+  - `service/`    — business logic
+  - `repository/` — Spring Data JPA repositories
+  - `dto/`        — request/response DTOs
+- `src/test/`     — JUnit 5 tests
+
+## Build & Test
+- Test:   `mvn test`
+- Build:  `mvn package -DskipTests`
+- Lint:   `mvn checkstyle:check`
+- Format: `mvn spotless:apply`
+
+## Conventions
+- Use constructor injection (never field injection with `@Autowired`)
+- All DTOs validated with Bean Validation (`@NotNull`, `@Size`, etc.)
+- Service layer must not reference HttpServletRequest
+- Integration tests use `@SpringBootTest` with Testcontainers
+
+## Do NOT
+- Modify `src/main/resources/db/migration/` — create new Flyway scripts only
+- Use `System.out.println` — use SLF4J logger
+- Catch and swallow exceptions silently
 ```
 
 ---
@@ -788,28 +909,274 @@ Turn 3: "Token should expire in 1h, not 24h — update just that constant"
 Skills live in `~/.agents/skills/` or `.agents/skills/` and let you invoke repeatable prompts as slash commands.
 
 ```bash
-# Create a skill file: ~/.agents/skills/add-tests.md
-# Then invoke:
-/add-tests
+# Create a skill file
+mkdir -p ~/.agents/skills
+cat > ~/.agents/skills/add-tests.md << 'EOF'
+For the file(s) mentioned, write comprehensive unit tests:
+1. Cover the happy path, edge cases, and error paths
+2. Mock all external dependencies (DB, HTTP, filesystem)
+3. Use the same testing framework already in the project
+4. Place tests next to the source file or in the nearest `tests/` dir
+5. Run the tests to confirm they pass before finishing
+EOF
+
+# Invoke in any session:
+/add-tests src/services/billing.ts
+
+# More useful skills to create:
+# ~/.agents/skills/add-docstrings.md  → add JSDoc/docstrings to a file
+# ~/.agents/skills/security-review.md → review a file for security issues
+# ~/.agents/skills/pr-description.md  → generate a PR description from /diff
+# ~/.agents/skills/explain.md         → explain what a file/function does
+```
+
+**Example: pr-description skill**
+```markdown
+<!-- ~/.agents/skills/pr-description.md -->
+Run /diff to see all changes in the current branch, then write a pull request
+description with:
+- A one-line summary title
+- "## What changed" section with bullet points per file group
+- "## Why" section explaining the motivation
+- "## Testing" section listing how to verify the changes
+Keep it concise and technical. Do not modify any files.
 ```
 
 ### Hooks — Automate Around Codex Actions
 
+Hooks run shell commands automatically before or after Codex tool calls.
+
 ```toml
 # .codex/config.toml
+
+# Run tests after every file write
 [[hooks.PostToolUse]]
 [[hooks.PostToolUse.hooks]]
 command = "npm test -- --passWithNoTests 2>&1 | tail -20"
+
+# Run linter after edits (Python)
+[[hooks.PostToolUse]]
+match = { tool = "write_file" }
+[[hooks.PostToolUse.hooks]]
+command = "ruff check . --fix && ruff format . 2>&1 | tail -5"
+
+# Run type-check after every TypeScript write
+[[hooks.PostToolUse]]
+match = { tool = "write_file", path_glob = "**/*.ts" }
+[[hooks.PostToolUse.hooks]]
+command = "npx tsc --noEmit 2>&1 | head -30"
+
+# Print a separator before every shell command (visibility)
+[[hooks.PreToolUse]]
+match = { tool = "shell" }
+[[hooks.PreToolUse.hooks]]
+command = "echo '──── shell ────────────────────────────────'"
+
+# Run security scan after changes to auth files
+[[hooks.PostToolUse]]
+match = { tool = "write_file", path_glob = "**/auth/**" }
+[[hooks.PostToolUse.hooks]]
+command = "npm run audit:auth 2>&1 | tail -10"
 ```
 
 ### MCP — Extend Context Beyond the Repo
 
 ```bash
-# Add GitHub MCP for PR/issue context
+# GitHub — access PRs, issues, review comments
 codex mcp add github -- npx -y @modelcontextprotocol/server-github
+# Requires: GITHUB_TOKEN env var
 
-# Add a filesystem MCP for cross-repo access
+# Filesystem — read files outside the current repo
 codex mcp add files -- npx -y @modelcontextprotocol/server-filesystem /path/to/other/repo
+
+# PostgreSQL — query your database directly
+codex mcp add db -- npx -y @modelcontextprotocol/server-postgres ******localhost/mydb
+
+# Slack — read channels, post messages
+codex mcp add slack -- npx -y @modelcontextprotocol/server-slack
+# Requires: SLACK_BOT_TOKEN env var
+
+# Brave Search — live web search
+codex mcp add search -- npx -y @modelcontextprotocol/server-brave-search
+# Requires: BRAVE_API_KEY env var
+
+# List all configured MCP servers and their tools
+codex mcp list
+/mcp             # list tools from inside a session
+```
+
+**MCP in config.toml (persistent)**
+```toml
+[mcp_servers.github]
+command = "npx"
+args    = ["-y", "@modelcontextprotocol/server-github"]
+env     = { GITHUB_TOKEN = "$GITHUB_TOKEN" }
+
+[mcp_servers.db]
+command = "npx"
+args    = ["-y", "@modelcontextprotocol/server-postgres", "postgresql://localhost/mydb"]
+
+[mcp_servers.slack]
+command = "npx"
+args    = ["-y", "@modelcontextprotocol/server-slack"]
+env     = { SLACK_BOT_TOKEN = "$SLACK_BOT_TOKEN" }
+```
+
+---
+
+## CI/CD Integration
+
+### GitHub Actions — Automated Codex Tasks
+
+```yaml
+# .github/workflows/codex-fix.yml
+# Triggered manually or on a label — runs Codex to fix lint errors
+name: Codex Auto-Fix
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: "Task for Codex to perform"
+        required: true
+        default: "fix all lint errors and failing tests"
+
+jobs:
+  codex:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Codex CLI
+        run: curl -fsSL https://chatgpt.com/codex/install.sh | sh
+
+      - name: Run Codex task
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          codex exec --yolo \
+            -m gpt-5.6-terra \
+            -s workspace-write \
+            "${{ github.event.inputs.task }}"
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "codex-bot"
+          git config user.email "codex-bot@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore: codex auto-fix"
+          git push
+```
+
+```yaml
+# .github/workflows/codex-pr-review.yml
+# Posts an AI code review on every PR
+name: Codex PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Codex CLI
+        run: curl -fsSL https://chatgpt.com/codex/install.sh | sh
+
+      - name: Review PR changes
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          git diff origin/${{ github.base_ref }}...HEAD > /tmp/pr.diff
+          codex exec --yolo -s read-only \
+            "Review the following diff for bugs, security issues, and missing tests.
+             Be concise. Output in markdown with sections: Bugs, Security, Tests.
+             $(cat /tmp/pr.diff)"
+```
+
+### Useful `codex exec` Scripting Patterns
+
+```bash
+# Check if any changes were made (exit 0 = changes, exit 1 = no changes)
+codex exec --yolo "fix all TypeScript type errors" && git diff --exit-code
+
+# Pipe Codex output into another tool
+codex exec --json "list all TODO comments with file:line" | jq '.[] | .file'
+
+# Loop: run Codex until tests pass (max 3 attempts)
+for i in 1 2 3; do
+  codex exec --yolo "run tests; fix any failures you find"
+  npm test && break
+  echo "Attempt $i failed, retrying..."
+done
+
+# Generate a changelog entry from recent commits
+git log --oneline HEAD~10..HEAD | \
+  codex exec --yolo "convert these commit messages into a CHANGELOG.md entry
+  following Keep a Changelog format"
+
+# Auto-fix after a failed deployment
+codex exec -m gpt-5.6-luna \
+  "The deployment just failed. Error log: $(cat deploy.log | tail -50).
+   Diagnose the root cause and fix the relevant source files."
+
+# Nightly dependency update task
+codex exec --yolo \
+  "Update all npm dependencies to their latest minor/patch versions.
+   Run the tests. If any break, revert that package and note it."
+```
+
+---
+
+## Troubleshooting
+
+### `codex doctor` — Diagnose Issues
+
+```bash
+codex doctor                  # interactive diagnostic report
+codex doctor --json           # machine-readable (pipe to jq)
+codex doctor --json | jq '.checks[] | select(.status == "fail")'
+```
+
+### Common Issues
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `sandbox: permission denied` | Sandbox blocking a required path | Use `-s workspace-write` or add path to sandbox allowlist |
+| `context length exceeded` | Too many tokens in session | `/compact` then re-anchor with a summary |
+| `rate limit` error | Too many requests | Lower `max_concurrency` in `[multi_agent]`; use `model_reasoning_effort = "low"` |
+| MCP server not starting | Missing binary or auth | `codex doctor`; check `codex mcp list`; run `codex mcp login <name>` |
+| Wrong model used | Default not set | Set `model = "gpt-5.6-terra"` in `~/.codex/config.toml` |
+| Codex touching unrelated files | Prompt too vague | Add explicit file paths and `Do NOT touch X` constraints |
+| `update failed` | Network / permissions | `codex update` or reinstall via `curl -fsSL https://chatgpt.com/codex/install.sh \| sh` |
+
+### Reset & Clean State
+
+```bash
+# Check what version you're on
+codex --version
+
+# Force update to latest
+codex update
+
+# Clear a stuck session
+/new
+
+# Re-auth if tokens expired
+codex login
+
+# Full reinstall
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
 ```
 
 ---
