@@ -262,7 +262,7 @@ codex "create PR title and description for our changes"        # PR templates
 
 # ─── Context-Aware Work ───
 codex -i screenshot.png "implement this UI exactly"            # visual reference
-codex -i wireframe.pdf "build the components from this design" # multi-page design
+codex -i wireframe.png "build the components from this design" # wireframe image
 codex "using AGENTS.md as reference, fix linting errors"       # use project config
 
 # ─── Sessions & Recovery ───
@@ -272,9 +272,9 @@ codex resume <SESSION_ID>                      # resume specific session by ID
 codex fork --last                              # branch into new direction
 
 # ─── Non-Interactive (CI/Scripts) ───
-codex exec "run npm test and fix failures" --yolo              # CI mode, full automation
-codex exec --json "list all TODO comments"                     # machine-readable output
-codex exec -o result.txt "generate API docs"                   # save to file
+codex exec "run npm test and fix failures"                       # CI mode, requires approval
+codex exec --json "list all TODO comments"                       # machine-readable output
+codex exec -o result.txt "generate API docs"                     # save to file
 ```
 
 ### Tier 2 — Frequent
@@ -1023,7 +1023,7 @@ Create an `AGENTS.md` file to guide Codex with project-specific knowledge:
 ## Build & Test
 - Install: `npm ci`
 - Dev:     `npm run dev` (starts server on port 3000)
-- Test:    `npm test` (jest, 95%+ coverage required)
+- Test:    `npm test` (jest, min 80% coverage)
 - Lint:    `npm run lint` (eslint + prettier)
 - Build:   `npm run build` (typescript → /dist)
 - Deploy:  `npm run deploy` (run tests, build, push to prod)
@@ -1049,7 +1049,7 @@ Create an `AGENTS.md` file to guide Codex with project-specific knowledge:
 - Change REST API response shapes without versioning (use `api/v2/` for breaking changes)
 - Delete data without audit logging
 - Use deprecated dependencies (check `npm audit`)
-- Deploy on Friday afternoons 🚫
+- 🚫 Deploy on Friday afternoons
 
 ## Stack
 - Node.js 20+
@@ -1088,8 +1088,10 @@ codex "Summarize what all agents completed. Check for conflicts between changes.
 # For agent-driven tasks, control costs by setting reasoning
 codex -c model_reasoning_effort=low "/agent refactor-auth"    # simple coordination
 codex -c model_reasoning_effort=high "/agent debug-memory"    # complex issues
+```
 
-# Set per sub-agent in config.toml
+```toml
+# Set per sub-agent in config.toml:
 [multi_agent]
 sub_agent_reasoning_effort = "low"  # agents are fast and cheap
 ```
@@ -1111,29 +1113,61 @@ codex "apply skill: add-error-handling to src/api/routes.ts"
 
 ### Continuous Integration with Codex Agents
 
-**GitHub Actions workflow:**
+**GitHub Actions workflow** (safe example for protected branches only):
 ```yaml
 name: Codex Automated Fixes
-on: [pull_request]
+on:
+  push:
+    branches: [main, develop]  # Restrict to protected branches
 jobs:
   codex-fix:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: |
-          # Run Codex in CI mode to fix issues
-          codex exec --yolo "run npm test and fix all failures"
+          # Setup API credentials (use repo secrets)
+          export OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
+          
+          # Run Codex in CI mode to fix issues (NO --yolo: requires human review)
+          # Note: Remove auto-push in production; create PR for review instead
+          codex exec "run npm test and fix all failures"
+          
+          # Verify tests still pass after fixes
+          npm test
           
           # Run linting fixes
           codex exec "run npm run lint -- --fix"
           
-          # Commit and push changes
-          git config user.name "Codex Bot"
-          git config user.email "bot@codex.dev"
+          # Verify lint passes
+          npm run lint
+          
+          # Option 1: Commit and create PR for review (RECOMMENDED)
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "fix: auto-fixes from Codex" || true
-          git push
+          if ! git diff --cached --quiet; then
+            git commit -m "fix: auto-fixes from Codex"
+            git push origin HEAD:codex-auto-fixes-${{ github.run_number }}
+            gh pr create \
+              --title "Auto-fixes from Codex" \
+              --body "Automated fixes from Codex. Please review before merging." \
+              --base ${{ github.ref_name }} \
+              --head codex-auto-fixes-${{ github.run_number }} \
+              || true
+          fi
+       env:
+         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+**Security Best Practices:**
+- Only trigger on `push` to protected branches (never `pull_request` from forks)
+- Never use `--yolo` in automated workflows (requires human review)
+- Create PRs for changes instead of auto-pushing
+- Use `OPENAI_API_KEY` from repository secrets only
+- Test and lint before committing
 
 ### Agent Development Checklist
 
@@ -1374,11 +1408,11 @@ Next: refresh endpoint in src/api/auth.py"
 | Situation | Command | Token Impact |
 |---|---|---|
 | New unrelated task | `/new` or start fresh `codex` | Fresh context |
-| Same task, long thread | `/compact` with focus hint | Saves 30-50% tokens |
+| Same task, long thread | `/compact` with focus hint | Reduces token usage significantly |
 | Task branches into two paths | `/fork` to branch session | Each fork independent |
 | Research-heavy prep work | `codex -s read-only ...` | Protects state, low approval |
 | Parallel independent tasks | `/agent "task 1"` and `/agent "task 2"` | Parallel, each gets own budget |
-| Complex multi-file refactor | Use high reasoning + save checkpoints | Plan before coding |
+| Complex multi-file refactor | `codex -c model_reasoning_effort=high ...` | High reasoning with checkpoints |
 
 ### Reasoning Effort vs. Token Spend & Speed
 
@@ -1395,9 +1429,9 @@ model_reasoning_effort = "xhigh"   # hardest problems: memory leaks, race condit
 codex -c model_reasoning_effort=low "rename variable: s/user_id/userId/"
 codex -c model_reasoning_effort=xhigh "debug the memory leak in event loop"
 
-codex exec -m gpt-5.6-sol "simple tasks" --low      # fast, cheap
-codex exec -m o4-mini "moderate tasks" --medium     # balanced
-codex exec -m gpt-5.6-luna "complex analysis"       # deep reasoning
+codex exec -m gpt-5.6-sol -c model_reasoning_effort=low "simple tasks"
+codex exec -m o4-mini -c model_reasoning_effort=medium "moderate tasks"
+codex exec -m gpt-5.6-luna -c model_reasoning_effort=high "complex analysis"
 ```
 
 ### Token Budget & Cost Estimation
@@ -1409,13 +1443,14 @@ codex exec -m gpt-5.6-luna "complex analysis"       # deep reasoning
 # Estimate for different approaches
 codex "Count tokens needed if I: (1) read 5 files, (2) use /compact, (3) run analysis"
 
-# Model token costs (approximate)
-# gpt-5.6-sol:      50% of Terra (fastest, cheapest)
-# gpt-5.6-terra:    1x (fast, good for daily work)
-# gpt-5.6-luna:     2x Terra (slower, more reasoning)
-# o4-mini:          1.5x Terra (fast with reasoning)
-# gpt-5.1-codex-max: 3x Terra (agentic, full lifecycle)
-# o3:               5x+ Terra (hardest problems only)
+# Model token costs (approximate, subject to change)
+# Verify current pricing at platform.openai.com/pricing
+# gpt-5.6-sol:      ~50% of Terra (fastest, cheapest)
+# gpt-5.6-terra:    1x baseline (fast, good for daily work)
+# gpt-5.6-luna:     ~2x Terra (slower, more reasoning)
+# o4-mini:          ~1.5x Terra (fast with reasoning)
+# gpt-5.1-codex-max: ~3x Terra (agentic, full lifecycle)
+# o3:               ~5x+ Terra (hardest problems only)
 ```
 
 ### Context Window Settings
