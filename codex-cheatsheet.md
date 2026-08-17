@@ -2,7 +2,7 @@
 
 > OpenAI Codex CLI commands ranked most → least useful, with prompt and context best practices.
 > Source: [developers.openai.com/codex](https://developers.openai.com/codex) · [GitHub](https://github.com/openai/codex)
-> Current version: **v0.146.0** (2026-07-29)
+> Current version: **v0.147.0** (2026-08-17)
 
 ---
 
@@ -13,26 +13,28 @@
    - [Method 2 — Desktop & Mobile Application](#method-2--desktop--mobile-application)
    - [Method 3 — VS Code Extension](#method-3--vs-code-extension)
 2. [Core CLI Commands](#core-cli-commands-most--least-used)
-3. [Global Flags](#global-flags-pass-to-any-command)
-4. [Sandbox Modes](#sandbox-modes---sandbox---s)
-5. [Approval Modes](#approval-modes---ask-for-approval---a)
-6. [Slash Commands](#slash-commands-interactive-mode-most--least-used)
-7. [Keyboard Shortcuts](#keyboard-shortcuts-tui)
-8. [AGENTS.md — Project Instructions](#agentsmd--project-instructions)
-9. [config.toml — Key Settings](#configtoml--key-settings)
-10. [Models (2026)](#models-2026)
-11. [Exec / CI Mode](#exec-non-interactive--ci-mode)
-12. [Multi-Agent (V2)](#multi-agent-v2--stable)
-13. [Thread Management](#thread-management-v0145)
-14. [Agent Plugins](#agent-plugins-v0143)
-15. [Proxy Support](#proxy-support-v0143)
-16. [Prompt Best Practices](#prompt-best-practices)
-17. [Context & Token Usage](#context--token-usage)
-18. [Effective Patterns](#effective-patterns)
-19. [CI/CD Integration](#cicd-integration)
-20. [Troubleshooting](#troubleshooting)
-21. [Quick Reference Card](#quick-reference-card)
-22. [Environment Variables](#environment-variables)
+3. [Daily CLI Workflows](#daily-cli-workflows-most-useful-patterns)
+4. [Global Flags](#global-flags-pass-to-any-command)
+5. [Sandbox Modes](#sandbox-modes---sandbox---s)
+6. [Approval Modes](#approval-modes---ask-for-approval---a)
+7. [Slash Commands](#slash-commands-interactive-mode-most--least-used)
+8. [Keyboard Shortcuts](#keyboard-shortcuts-tui)
+9. [AGENTS.md — Project Instructions](#agentsmd--project-instructions)
+10. [config.toml — Key Settings](#configtoml--key-settings)
+11. [Models (2026)](#models-2026)
+12. [Exec / CI Mode](#exec-non-interactive--ci-mode)
+13. [Multi-Agent (V2)](#multi-agent-v2--stable)
+14. [Thread Management](#thread-management-v0145)
+15. [Agent Development Best Practices](#agent-development-best-practices-latest-support)
+16. [Agent Plugins](#agent-plugins-v0143)
+17. [Proxy Support](#proxy-support-v0143)
+18. [Prompt Best Practices](#prompt-best-practices)
+19. [Context & Token Usage](#context--token-usage)
+20. [Effective Patterns](#effective-patterns)
+21. [CI/CD Integration](#cicd-integration)
+22. [Troubleshooting](#troubleshooting)
+23. [Quick Reference Card](#quick-reference-card)
+24. [Environment Variables](#environment-variables)
 
 ---
 
@@ -138,22 +140,84 @@ The **Codex extension for Visual Studio Code** integrates Codex directly into yo
 | `Ctrl+K Ctrl+I` / `Cmd+K Cmd+I` | Inline edit selected code |
 | `Ctrl+K Ctrl+E` / `Cmd+K Cmd+E` | Explain selected code |
 
-**Extension settings (`settings.json`):**
+**Extension settings (`settings.json`) — Core:**
 ```json
 {
   "codex.model": "gpt-5.6-terra",
   "codex.sandbox": "workspace-write",
   "codex.autoContext": true,
   "codex.showInlineHints": true,
-  "codex.approval": "on-change"
+  "codex.approval": "on-change",
+  "codex.reasoning": "medium"
 }
 ```
 
-**Tips for VS Code:**
-- Right-click any selection → **Codex** sub-menu for quick inline actions.
-- The extension automatically passes open files and the `AGENTS.md` at the workspace root as context.
-- Use `@workspace` in the chat panel to explicitly scope answers to your project.
-- Terminal sessions started from VS Code's integrated terminal share the same Codex session as the sidebar.
+**Advanced Extension Settings:**
+```json
+{
+  "codex.contextSize": "auto",             // auto|small|large - context window management
+  "codex.tokenWarningThreshold": 80,       // warn when tokens reach 80% of limit
+  "codex.autoCompact": true,               // auto-compact on token threshold
+  "codex.threadNaming": "auto",            // auto|manual - auto-generate thread names
+  "codex.codeCompletion": true,            // inline code suggestions
+  "codex.diagnostics": true,               // show Codex diagnostic hints
+  "codex.formatOnWrite": true,             // format code after Codex edits
+  "codex.ignorePatterns": [                // files/folders to exclude from context
+    "**/node_modules",
+    "**/.git",
+    "**/build",
+    "**/dist"
+  ],
+  "codex.skipFiles": [],                   // explicitly skip these file patterns
+  "codex.additionalContext": [],           // always include these files/patterns
+  "codex.shortcutFocus": "editor"          // editor|chat - focus after applying edits
+}
+```
+
+**Keyboard shortcuts (VS Code) — Complete:**
+
+| Shortcut | Action | Customizable |
+|---|---|---|
+| `Ctrl+Shift+I` / `Cmd+Shift+I` | Open Codex chat sidebar | Yes |
+| `Ctrl+K Ctrl+I` / `Cmd+K Cmd+I` | Inline edit selected code | Yes |
+| `Ctrl+K Ctrl+E` / `Cmd+K Cmd+E` | Explain selected code | Yes |
+| `Ctrl+K Ctrl+T` / `Cmd+K Cmd+T` | Generate tests for selection | Yes |
+| `Ctrl+K Ctrl+F` / `Cmd+K Cmd+F` | Fix bugs in selection | Yes |
+| `Ctrl+K Ctrl+R` / `Cmd+K Cmd+R` | Refactor selection | Yes |
+| `Ctrl+K Ctrl+D` / `Cmd+K Cmd+D` | Show diff of last edit | No |
+| `Alt+Shift+C` | Clear context & start fresh | Yes |
+
+**Custom keyboard shortcuts (`keybindings.json`):**
+```json
+[
+  {
+    "key": "ctrl+alt+e",
+    "command": "codex.editSelection",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+alt+t",
+    "command": "codex.generateTests",
+    "when": "editorTextFocus"
+  },
+  {
+    "key": "ctrl+alt+r",
+    "command": "codex.refactor",
+    "when": "editorTextFocus"
+  }
+]
+```
+
+**Tips for VS Code — Effective Codex Development:**
+- **Right-click workflow:** Right-click any selection → **Codex** sub-menu for quick inline actions (edit, explain, fix, test).
+- **Auto-context:** The extension automatically passes open files and the `AGENTS.md` at the workspace root as context — no setup needed.
+- **Scoped queries:** Use `@workspace` in the chat panel to explicitly scope answers to your project; use `@file` for single-file context.
+- **Terminal integration:** Terminal sessions started from VS Code's integrated terminal share the same Codex session as the sidebar.
+- **Workspace symbol search:** Use `@symbol:functionName` to reference specific functions across your project in chat.
+- **Multi-file edits:** Select multiple files in Explorer, then right-click → **Codex: Edit Multiple** to make coordinated changes.
+- **Token visibility:** Enable `"codex.tokenWarningThreshold": 80` in settings to get warned before hitting token limits.
+- **Sandbox safety:** Use `"codex.sandbox": "read-only"` for exploration, switch to `"workspace-write"` when ready to edit.
+- **Session persistence:** Sessions created in the sidebar are automatically saved and resumable from `Codex: Resume Session` command.
 
 ---
 
@@ -169,26 +233,48 @@ The **Codex extension for Visual Studio Code** integrates Codex directly into yo
 | `codex resume` | Resume most recent saved session |
 | `codex update` | Check for and apply CLI updates |
 
-**Examples:**
+**Most Useful Daily Examples:**
 ```bash
-# Start interactive session
-codex
+# ─── Quick Edits ───
+codex "fix typo: s/occured/occurred/ in all .ts files"          # simple text replacements
+codex "add error handling to async functions in src/api/"       # targeted scope
+codex "convert this to async/await" < function.js              # stdin input
 
-# Open with prompt pre-loaded
-codex "add input validation to the login endpoint"
+# ─── Code Reviews & Debugging ───
+codex "review this for security issues: [paste code]"          # inline code review
+codex "explain the memory leak in this: [paste]"               # debugging help
+codex -s read-only "what does this codebase do?"               # safe exploration
 
-# Non-interactive (CI / scripts)
-codex exec "run tests and fix any failures"
-codex exec "refactor auth.py to use dependency injection"
+# ─── Testing & Validation ───
+codex "run tests and fix all failures"                         # automated test fix
+codex exec "generate unit tests for src/api/users.ts"          # headless test gen
+codex "add tests for all edge cases in parseJSON()"            # test coverage
 
-# Attach images (screenshots, designs, diagrams)
-codex -i screenshot.png "implement this UI"
-codex exec -i design.png "build this component"
+# ─── File-Specific Work ───
+codex "refactor src/auth.ts to be more readable"               # single file
+codex "convert src/db/schema.sql to TypeScript types"          # cross-type
+codex "add JSDoc comments to all exports in src/utils/"        # batch documentation
 
-# Resume previous session (picker shown)
-codex resume
-codex resume --last           # skip picker, resume most recent
-codex resume <SESSION_ID>     # resume specific session
+# ─── Git Integration ───
+codex /diff                                    # show git changes in session
+codex "commit message: add detailed summary of changes"        # auto-commit message
+codex "create PR title and description for our changes"        # PR templates
+
+# ─── Context-Aware Work ───
+codex -i screenshot.png "implement this UI exactly"            # visual reference
+codex -i wireframe.pdf "build the components from this design" # multi-page design
+codex "using AGENTS.md as reference, fix linting errors"       # use project config
+
+# ─── Sessions & Recovery ───
+codex resume                                   # interactive picker
+codex resume --last                            # resume most recent (no picker)
+codex resume <SESSION_ID>                      # resume specific session by ID
+codex fork --last                              # branch into new direction
+
+# ─── Non-Interactive (CI/Scripts) ───
+codex exec "run npm test and fix failures" --yolo              # CI mode, full automation
+codex exec --json "list all TODO comments"                     # machine-readable output
+codex exec -o result.txt "generate API docs"                   # save to file
 ```
 
 ### Tier 2 — Frequent
@@ -267,6 +353,151 @@ codex completion bash >> ~/.bashrc
 
 # Sandbox a command
 codex sandbox --permissions-profile :workspace -- npm test
+```
+
+---
+
+## Daily CLI Workflows (Most Useful Patterns)
+
+### Workflow 1: Code Review & Quick Fixes
+
+```bash
+# Explore the codebase safely
+codex -s read-only "explain the authentication flow"
+
+# Review specific file
+codex -s read-only "review src/auth/login.ts for security issues"
+
+# Fix issues found
+codex "fix the SQL injection vulnerability in src/db/query.ts:45-60"
+
+# Verify the fix
+codex "run security audit and confirm the fix works"
+```
+
+### Workflow 2: Test-Driven Development
+
+```bash
+# Start session
+codex
+
+# Generate tests first
+codex "generate unit tests for parseUserInput() function"
+
+# Implement feature
+codex "implement parseUserInput() to pass all tests"
+
+# Verify
+codex "run all tests and show results"
+
+# Compress if needed
+/compact
+```
+
+### Workflow 3: Multi-File Refactoring
+
+```bash
+# Plan the refactor
+codex "plan: convert src/api/ to async/await. Files affected? Scope? Risks?"
+
+# Get detailed guidance
+/plan  # activate plan mode
+
+# Make changes with checkpoint
+codex "convert src/api/routes.ts to async/await"
+/thread new "Phase 1: routes.ts complete"
+
+# Continue to next file
+codex "convert src/api/handlers.ts to async/await"
+/thread new "Phase 2: handlers.ts complete"
+
+# Compress if session is long
+/compact "Summary: converted routes.ts and handlers.ts. Next: middleware.ts"
+
+# Final verification
+codex "verify all async/await conversions: test suite, linting, type checks"
+```
+
+### Workflow 4: Bug Investigation & Fix
+
+```bash
+# Start with minimal context
+codex -s read-only "where is the memory leak in the event loop?"
+
+# Deep dive
+codex "show me the exact line and explain why it leaks memory"
+
+# Use high reasoning
+codex -c model_reasoning_effort=high "fix the memory leak: [paste code]"
+
+# Verify fix
+codex "verify the fix: run memory profiler and confirm improvement"
+```
+
+### Workflow 5: Documentation Generation
+
+```bash
+# Generate from code (headless mode)
+codex exec --json "list all exported functions in src/ with signatures" > functions.json
+
+# Create docs
+codex "using functions.json, generate comprehensive API documentation"
+
+# Save to file
+codex exec -o API_DOCS.md "generate README.md with installation, usage, examples"
+
+# Update existing docs
+codex "update docs/API.md with new endpoints from src/api/"
+```
+
+### Workflow 6: Emergency Bug Fix in Production
+
+```bash
+# Fast diagnosis with low reasoning
+codex -c model_reasoning_effort=low "error 500 in production: [paste log]. Root cause?"
+
+# Quick fix
+codex "implement minimal fix for the 500 error: [paste]"
+
+# Verify
+codex exec "run smoke tests against staging"
+
+# Document
+codex "create post-mortem entry for this incident"
+```
+
+### Workflow 7: Parallel Task Coordination
+
+```bash
+# Main session
+codex "refactor auth module - [main task description]"
+
+# Spawn sub-agents for independent work
+/agent "optimize database queries in audit_log table"
+/agent "add unit tests for newly refactored auth functions"
+/agent "update API documentation for auth endpoints"
+
+# Check status
+/agent status
+
+# Consolidate results
+codex "summarize results from all sub-agents and verify no conflicts"
+```
+
+### Workflow 8: Large Codebase Onboarding
+
+```bash
+# Safe exploration with read-only
+codex -s read-only "explain this codebase: directory structure, main entry point, tech stack"
+
+# Deep dive on architecture
+codex -s read-only "diagram the architecture: how do API, database, and services interact?"
+
+# Understand conventions
+codex -s read-only "what are the coding conventions, patterns, and anti-patterns?"
+
+# Get up to speed
+/goal "master this codebase and be ready to implement new features"
 ```
 
 ---
@@ -772,6 +1003,152 @@ codex
 
 ---
 
+## Agent Development Best Practices (Latest Support)
+
+### Designing Effective AGENTS.md
+
+Create an `AGENTS.md` file to guide Codex with project-specific knowledge:
+
+```markdown
+# Project: my-app (v2.0)
+
+## Repo Layout
+- `src/`           — TypeScript source code
+- `src/api/`       — Express API routes
+- `src/models/`    — TypeScript data models
+- `src/tests/`     — Jest test suite
+- `docs/`          — API and architecture docs
+- `config/`        — Environment and build configs
+
+## Build & Test
+- Install: `npm ci`
+- Dev:     `npm run dev` (starts server on port 3000)
+- Test:    `npm test` (jest, 95%+ coverage required)
+- Lint:    `npm run lint` (eslint + prettier)
+- Build:   `npm run build` (typescript → /dist)
+- Deploy:  `npm run deploy` (run tests, build, push to prod)
+
+## Conventions
+- TypeScript strict mode; no `any` types
+- All API responses wrapped in `{ status, data, error }`
+- Database access only through repository classes
+- All async functions use async/await (no callbacks)
+- Jest tests for every function; min 80% coverage
+- Comments for WHY, not WHAT
+- PR description must include: what changed, why, testing done
+
+## Important Patterns
+- Auth via JWT tokens in Authorization header
+- All errors logged with context: user_id, request_id, stack
+- Database transactions for multi-step operations
+- Rate limiting: 100 req/min per user, 1000 req/min per IP
+
+## Do NOT
+- Modify `migrations/` directly — use `npm run migrate:create`
+- Hardcode secrets, API keys, or environment variables
+- Change REST API response shapes without versioning (use `api/v2/` for breaking changes)
+- Delete data without audit logging
+- Use deprecated dependencies (check `npm audit`)
+- Deploy on Friday afternoons 🚫
+
+## Stack
+- Node.js 20+
+- Express 5.x
+- TypeScript 5.4+
+- PostgreSQL 15+
+- Jest 29+
+```
+
+### Multi-Agent Coordination
+
+**Spawn parallel agents for independent work:**
+```bash
+codex "Please spawn 3 agents:
+Agent 1: Refactor src/auth/ from callback-based to async/await. Update all tests.
+Agent 2: Add comprehensive error handling to src/api/error-handler.ts
+Agent 3: Update all API documentation in docs/ to match new endpoints"
+
+# Monitor progress
+/agent status
+
+# Consolidate results when all complete
+codex "Summarize what all agents completed. Check for conflicts between changes."
+```
+
+**Use `/side` for lightweight throwaway research:**
+```bash
+/side
+"What's the fastest way to cache database queries in Node.js?"
+# (Research agent, doesn't modify code)
+```
+
+### Agent Reasoning & Cost Control
+
+```bash
+# For agent-driven tasks, control costs by setting reasoning
+codex -c model_reasoning_effort=low "/agent refactor-auth"    # simple coordination
+codex -c model_reasoning_effort=high "/agent debug-memory"    # complex issues
+
+# Set per sub-agent in config.toml
+[multi_agent]
+sub_agent_reasoning_effort = "low"  # agents are fast and cheap
+```
+
+### Building Skills for Reuse
+
+**Define a skill (snippet of repeatable code):**
+```bash
+/skill new "add-error-handling"
+"For all async functions in [path]:
+ - Add try/catch blocks
+ - Log errors with context (file, function, line)
+ - Return { status: 'error', message } on failure"
+
+# Reuse skill in future sessions
+/skill add-error-handling  # applies to current selection
+codex "apply skill: add-error-handling to src/api/routes.ts"
+```
+
+### Continuous Integration with Codex Agents
+
+**GitHub Actions workflow:**
+```yaml
+name: Codex Automated Fixes
+on: [pull_request]
+jobs:
+  codex-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          # Run Codex in CI mode to fix issues
+          codex exec --yolo "run npm test and fix all failures"
+          
+          # Run linting fixes
+          codex exec "run npm run lint -- --fix"
+          
+          # Commit and push changes
+          git config user.name "Codex Bot"
+          git config user.email "bot@codex.dev"
+          git add -A
+          git commit -m "fix: auto-fixes from Codex" || true
+          git push
+```
+
+### Agent Development Checklist
+
+- [ ] Created `AGENTS.md` at repo root with complete project context
+- [ ] Set appropriate `model_reasoning_effort` for agent tasks
+- [ ] Defined reusable `/skill` templates for common patterns
+- [ ] Tested agents in read-only mode first (`-s read-only`)
+- [ ] Verified token usage with `/usage` before running expensive tasks
+- [ ] Set `max_concurrency` in config.toml to avoid token exhaustion
+- [ ] Monitored first few agent runs with `/agent status`
+- [ ] Documented custom patterns in `AGENTS.md` for consistency
+- [ ] Added post-agent verification steps (tests, linting, type checks)
+
+---
+
 ## Agent Plugins (v0.143+)
 
 Plugins extend Codex with packaged skills, tools, and integrations.
@@ -914,34 +1291,62 @@ against the OrderStatus enum before insert"
 ```
 /status        # tokens used this session + model
 /usage         # account-level consumption
+/compact       # compress session history (saves tokens, keeps context)
 ```
 
 ### What Costs the Most Tokens
 
 | Action | Cost | Fix |
 |---|---|---|
-| Reading large files in full | High | Mention specific line ranges |
+| Reading large files in full | High | Mention specific line ranges: `src/api.ts:50-100` |
 | Pasting full file contents | High | Reference by path — let Codex read it |
-| Long back-and-forth iterations | Medium | `/compact` mid-session |
-| Subagents (parallel tasks) | High | Each runs its own context |
+| Long back-and-forth iterations | Medium | `/compact` mid-session to summarize |
+| Subagents (parallel tasks) | High | Each runs its own context; use sparingly |
 | Live web search results | Medium | Use `web_search = "cached"` in config |
+| Images & attachments | Medium | Compress before attaching; describe visually if possible |
+| Reasoning effort (xhigh) | Very High | Use `low`/`medium` for simple tasks, `xhigh` only for complex bugs |
 
-### Smart Context Management
+### Smart Context Management — Commands
 
 ```bash
-# Before context gets bloated — summarize and compress
+# Compress history mid-session (MOST IMPORTANT for long sessions)
 /compact
 
 # Give Codex a map instead of letting it explore
-codex "Entry point: src/server.ts → routes in src/routes/ → handlers in src/handlers/auth.ts.
-Only look at the auth handler."
+codex "Entry point: src/server.ts → routes in src/routes/ → 
+       handlers in src/handlers/auth.ts. Only look at the auth handler."
 
 # Tell Codex what to ignore
 codex "Only look at src/auth/ — ignore src/billing/ and src/reporting/"
 
 # Batch related questions in one turn (saves round-trips)
 codex "In one pass: (1) where sessions are stored, (2) whether they're encrypted,
-(3) what the TTL is. Report before making any changes."
+       (3) what the TTL is. Report findings before making any changes."
+
+# Switch to low reasoning for simple tasks
+/model gpt-5.6-sol
+codex -c model_reasoning_effort=low "rename variable: s/user_id/userId/"
+
+# Use read-only mode to explore without bloating context
+codex -s read-only "explain the auth flow"
+```
+
+### Smart Context Management — Patterns
+
+```bash
+# Before context gets bloated — summarize and compress
+/compact
+
+# Reference files by path (Codex reads on demand)
+codex "In src/auth/login.ts and src/auth/logout.ts, 
+       add session cleanup. Reference lines 45-60 in login.ts for session handling."
+
+# Use AGENTS.md to set boundaries
+# Create AGENTS.md with:
+# - Repo Layout (so Codex knows file structure)
+# - Do NOT (what to avoid)
+# - Conventions (code style)
+# Then Codex respects these automatically
 ```
 
 ### Preserve Context Across Long Tasks
@@ -951,38 +1356,78 @@ codex "In one pass: (1) where sessions are stored, (2) whether they're encrypted
 codex "Summarize: what we've done, what files changed, what's next"
 /compact
 
-# After compact — re-anchor
+# After compact — re-anchor with progress
 codex "Continuing the auth refactor. Login and logout updated.
 Next: refresh endpoint in src/api/auth.py"
 
 # Use /goal for multi-session continuity
 /goal "migrate auth module to async/await — 3/8 files done"
+
+# Use threads to organize work
+/thread new "Phase 1: Extract auth logic"
+/thread new "Phase 2: Add tests"
+/thread new "Phase 3: Refactor edge cases"
 ```
 
 ### Session Strategy
 
-| Situation | Action |
-|---|---|
-| New unrelated task | `/new` or start fresh `codex` |
-| Same task, long thread | `/compact` with a focus hint |
-| Task branches into two directions | `/fork` each branch |
-| Research-heavy prep work | Use `-s read-only` to protect state |
-| Parallel independent tasks | Use sub-agents via `/agent` |
+| Situation | Command | Token Impact |
+|---|---|---|
+| New unrelated task | `/new` or start fresh `codex` | Fresh context |
+| Same task, long thread | `/compact` with focus hint | Saves 30-50% tokens |
+| Task branches into two paths | `/fork` to branch session | Each fork independent |
+| Research-heavy prep work | `codex -s read-only ...` | Protects state, low approval |
+| Parallel independent tasks | `/agent "task 1"` and `/agent "task 2"` | Parallel, each gets own budget |
+| Complex multi-file refactor | Use high reasoning + save checkpoints | Plan before coding |
 
-### Reasoning Effort vs. Token Spend
+### Reasoning Effort vs. Token Spend & Speed
 
 ```toml
-# config.toml — set per session or per task type
-model_reasoning_effort = "low"     # fast, cheap, simple tasks
-model_reasoning_effort = "medium"  # default — balanced
-model_reasoning_effort = "high"    # complex bugs, architecture
-model_reasoning_effort = "xhigh"   # long multi-file refactors
+# config.toml — set default per project
+model_reasoning_effort = "low"     # fast, cheap, simple tasks (var rename, comments)
+model_reasoning_effort = "medium"  # default — balanced (most coding tasks)
+model_reasoning_effort = "high"    # complex bugs, architecture decisions
+model_reasoning_effort = "xhigh"   # hardest problems: memory leaks, race conditions
 ```
 
-Or override per invocation:
+**Per-invocation override:**
 ```bash
-codex -c model_reasoning_effort=low "rename variable: s/user_id/userId/ in auth.ts"
-codex -c model_reasoning_effort=xhigh "debug the memory leak in the event loop"
+codex -c model_reasoning_effort=low "rename variable: s/user_id/userId/"
+codex -c model_reasoning_effort=xhigh "debug the memory leak in event loop"
+
+codex exec -m gpt-5.6-sol "simple tasks" --low      # fast, cheap
+codex exec -m o4-mini "moderate tasks" --medium     # balanced
+codex exec -m gpt-5.6-luna "complex analysis"       # deep reasoning
+```
+
+### Token Budget & Cost Estimation
+
+```bash
+# Check before and after
+/status                    # before: see current usage
+
+# Estimate for different approaches
+codex "Count tokens needed if I: (1) read 5 files, (2) use /compact, (3) run analysis"
+
+# Model token costs (approximate)
+# gpt-5.6-sol:      50% of Terra (fastest, cheapest)
+# gpt-5.6-terra:    1x (fast, good for daily work)
+# gpt-5.6-luna:     2x Terra (slower, more reasoning)
+# o4-mini:          1.5x Terra (fast with reasoning)
+# gpt-5.1-codex-max: 3x Terra (agentic, full lifecycle)
+# o3:               5x+ Terra (hardest problems only)
+```
+
+### Context Window Settings
+
+```json
+// settings.json or codex config
+{
+  "context_size_limit": "auto",        // auto|64k|128k|200k - adapt to model
+  "auto_compact_at_percent": 80,       // auto-compact at 80% full
+  "preserve_on_compact": ["goals", "decisions", "summary"],
+  "token_warning_threshold": 85        // warn at 85% usage
+}
 ```
 
 ---
