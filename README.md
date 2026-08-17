@@ -2,8 +2,8 @@
 
 > A comprehensive, up-to-date reference for [OpenAI Codex CLI](https://github.com/openai/codex) — commands, slash commands, AGENTS.md patterns, config, and prompt best practices.
 
-[![Last Updated](https://img.shields.io/badge/updated-2026--08--03-blue)](./codex-cheatsheet.md)
-[![Codex CLI](https://img.shields.io/badge/Codex%20CLI-v0.146+-brightgreen)](https://github.com/openai/codex/releases)
+[![Last Updated](https://img.shields.io/badge/updated-2026--08--17-blue)](./codex-cheatsheet.md)
+[![Codex CLI](https://img.shields.io/badge/Codex%20CLI-v0.147+-brightgreen)](https://github.com/openai/codex/releases)
 [![License](https://img.shields.io/badge/license-MIT-lightgrey)](#license)
 
 ---
@@ -16,11 +16,13 @@
 |---|---|
 | [Installation & Auth](#) | Terminal CLI (`curl`/npm/brew), Desktop & Mobile app, VS Code extension, API key + ChatGPT auth |
 | [Core CLI Commands](#) | Tiered reference: daily drivers → cloud → MCP/plugins |
+| [Daily CLI Workflows](#) | 8 practical workflows: code review, TDD, refactoring, bug fixes, CI integration, onboarding |
 | [Global Flags](#) | `--sandbox`, `--model`, `--ask-for-approval`, `--yolo`, `--search` |
 | [Sandbox & Approval Modes](#) | When to use `read-only`, `workspace-write`, `writes`, `never` |
 | [Slash Commands](#) | Every `/command` ranked most → least used |
 | [Keyboard Shortcuts](#) | TUI shortcuts: plan mode, cancel, history |
 | [Multi-Agent (V2)](#) | Sub-agent config, parallel patterns, token warnings |
+| [Agent Development](#) | AGENTS.md design, multi-agent coordination, skills, CI integration |
 | [Thread Management](#) | Naming, pinning, history search, `/import` from Cursor/Claude Code |
 | [Agent Plugins](#) | Install, publish, manifests, Bedrock + Claude marketplaces |
 | [Proxy Support](#) | Corporate proxy, custom CA, PAC/WPAD |
@@ -29,8 +31,9 @@
 | [Models (2026)](#) | GPT-5.6 Sol/Terra/Luna, o4-mini, o3, Bedrock |
 | [Exec / CI Mode](#) | Scripted, headless usage; JSON output; audio input |
 | [Prompt Best Practices](#) | 4-part structure, plan mode, research-then-implement |
-| [Context & Token Management](#) | `/compact`, session strategy, reasoning effort |
+| [Context & Token Management](#) | `/compact`, `/status`, token budgets, reasoning effort, practical commands |
 | [Effective Patterns](#) | Skills, hooks, MCP, defensive prompts, iterative refinement |
+| [VS Code Integration](#) | Advanced settings, keyboard shortcuts, workflow tips |
 | [CI/CD Integration](#) | GitHub Actions workflows |
 | [Troubleshooting](#) | `codex doctor`, common issues |
 | [Quick Reference Card](#) | One-screen summary of everything |
@@ -129,7 +132,7 @@ This cheatsheet tracks the [openai/codex](https://github.com/openai/codex) relea
 codex update        # update the CLI
 ```
 
-Current coverage: **v0.146.0** (2026-07-29)
+Current coverage: **v0.147.0** (2026-08-17)
 
 ---
 
