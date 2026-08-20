@@ -14,30 +14,30 @@
 
 | Section | What you'll find |
 |---|---|
-| [Installation & Auth](#) | Terminal CLI (`curl`/npm/brew), Desktop & Mobile app, VS Code extension, API key + ChatGPT auth |
-| [Core CLI Commands](#) | Tiered reference: daily drivers → cloud → MCP/plugins |
-| [Daily CLI Workflows](#) | 8 practical workflows: code review, TDD, refactoring, bug fixes, CI integration, onboarding |
-| [Global Flags](#) | `--sandbox`, `--model`, `--ask-for-approval`, `--yolo`, `--search` |
-| [Sandbox & Approval Modes](#) | When to use `read-only`, `workspace-write`, `writes`, `never` |
-| [Slash Commands](#) | Every `/command` ranked most → least used |
-| [Keyboard Shortcuts](#) | TUI shortcuts: plan mode, cancel, history |
-| [Multi-Agent (V2)](#) | Sub-agent config, parallel patterns, token warnings |
-| [Agent Development](#) | AGENTS.md design, multi-agent coordination, skills, CI integration |
-| [Thread Management](#) | Naming, pinning, history search, `/import` from Cursor/Claude Code |
-| [Agent Plugins](#) | Install, publish, manifests, Bedrock + Claude marketplaces |
-| [Proxy Support](#) | Corporate proxy, custom CA, PAC/WPAD |
-| [AGENTS.md Guide](#) | File hierarchy, full template, stack examples |
-| [config.toml Reference](#) | All key settings: model, sandbox, features, MCP, network |
-| [Models (2026)](#) | GPT-5.6 Sol/Terra/Luna, o4-mini, o3, Bedrock |
-| [Exec / CI Mode](#) | Scripted, headless usage; JSON output; audio input |
-| [Prompt Best Practices](#) | 4-part structure, plan mode, research-then-implement |
-| [Context & Token Management](#) | `/compact`, `/status`, token budgets, reasoning effort, practical commands |
-| [Effective Patterns](#) | Skills, hooks, MCP, defensive prompts, iterative refinement |
-| [VS Code Integration](#) | Advanced settings, keyboard shortcuts, workflow tips |
-| [CI/CD Integration](#) | GitHub Actions workflows |
-| [Troubleshooting](#) | `codex doctor`, common issues |
-| [Quick Reference Card](#) | One-screen summary of everything |
-| [Environment Variables](#) | All supported env vars |
+| [Installation & Auth](./codex-cheatsheet.md#installation--auth) | Terminal CLI (`curl`/npm/brew), Desktop & Mobile app, VS Code extension, API key + ChatGPT auth |
+| [Core CLI Commands](./codex-cheatsheet.md#core-cli-commands-most--least-used) | Tiered reference: daily drivers → cloud → MCP/plugins |
+| [Daily CLI Workflows](./codex-cheatsheet.md#daily-cli-workflows-most-useful-patterns) | 8 practical workflows: code review, TDD, refactoring, bug fixes, CI integration, onboarding |
+| [Global Flags](./codex-cheatsheet.md#global-flags-pass-to-any-command) | `--sandbox`, `--model`, `--ask-for-approval`, `--yolo`, `--search` |
+| [Sandbox Modes](./codex-cheatsheet.md#sandbox-modes---sandbox---s) | When to use `read-only`, `workspace-write`, `writes`, `never` |
+| [Approval Modes](./codex-cheatsheet.md#approval-modes---ask-for-approval---a) | Request approval before code execution |
+| [Slash Commands](./codex-cheatsheet.md#slash-commands-interactive-mode-most--least-used) | Every `/command` ranked most → least used |
+| [Keyboard Shortcuts](./codex-cheatsheet.md#keyboard-shortcuts-tui) | TUI shortcuts: plan mode, cancel, history |
+| [AGENTS.md Guide](./codex-cheatsheet.md#agentsmd--project-instructions) | File hierarchy, full template, stack examples |
+| [config.toml Reference](./codex-cheatsheet.md#configtoml--key-settings) | All key settings: model, sandbox, features, MCP, network |
+| [Models (2026)](./codex-cheatsheet.md#models-2026) | GPT-5.6 Sol/Terra/Luna, o4-mini, o3, Bedrock |
+| [Exec / CI Mode](./codex-cheatsheet.md#exec-non-interactive--ci-mode) | Scripted, headless usage; JSON output; audio input |
+| [Multi-Agent (V2)](./codex-cheatsheet.md#multi-agent-v2--stable) | Sub-agent config, parallel patterns, token warnings |
+| [Agent Development](./codex-cheatsheet.md#agent-development-best-practices-latest-support) | AGENTS.md design, multi-agent coordination, skills, CI integration |
+| [Thread Management](./codex-cheatsheet.md#thread-management-v0145) | Naming, pinning, history search, `/import` from Cursor/Claude Code |
+| [Agent Plugins](./codex-cheatsheet.md#agent-plugins-v0143) | Install, publish, manifests, Bedrock + Claude marketplaces |
+| [Proxy Support](./codex-cheatsheet.md#proxy-support-v0143) | Corporate proxy, custom CA, PAC/WPAD |
+| [Prompt Best Practices](./codex-cheatsheet.md#prompt-best-practices) | 4-part structure, plan mode, research-then-implement |
+| [Context & Token Management](./codex-cheatsheet.md#context--token-usage) | `/compact`, `/status`, token budgets, reasoning effort, practical commands |
+| [Effective Patterns](./codex-cheatsheet.md#effective-patterns) | Skills, hooks, MCP, defensive prompts, iterative refinement |
+| [CI/CD Integration](./codex-cheatsheet.md#cicd-integration) | GitHub Actions workflows |
+| [Troubleshooting](./codex-cheatsheet.md#troubleshooting) | `codex doctor`, common issues |
+| [Quick Reference Card](./codex-cheatsheet.md#quick-reference-card) | One-screen summary of everything |
+| [Environment Variables](./codex-cheatsheet.md#environment-variables) | All supported env vars |
 
 ---
 
